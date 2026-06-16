@@ -7,7 +7,7 @@
 import asyncio
 import os
 import sys
-import time
+import traceback
 
 from passlib.context import CryptContext
 
@@ -25,16 +25,15 @@ DEFAULT_NICKNAME = "densu"
 
 async def wait_for_db(max_retries: int = 30, interval: int = 2):
     """等待数据库就绪。"""
-    db_config = TORTOISE_ORM["connections"]["default"]["credentials"]
     for i in range(max_retries):
         try:
             conn = await Tortoise.get_connection("default")
             await conn.execute_query("SELECT 1")
             print(f"[init] 数据库连接成功")
             return
-        except Exception:
-            print(f"[init] 等待数据库就绪... ({i + 1}/{max_retries})")
-            time.sleep(interval)
+        except Exception as e:
+            print(f"[init] 等待数据库就绪... ({i + 1}/{max_retries}), 错误: {e}")
+            await asyncio.sleep(interval)
     raise RuntimeError("数据库连接超时")
 
 
@@ -73,4 +72,8 @@ async def init_database():
 
 
 if __name__ == "__main__":
-    asyncio.run(init_database())
+    try:
+        asyncio.run(init_database())
+    except Exception:
+        traceback.print_exc()
+        sys.exit(1)
