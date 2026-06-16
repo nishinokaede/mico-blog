@@ -1,0 +1,71 @@
+.heatmap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.heatmapBody {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.weekdayLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  justify-content: flex-start;
+  padding-top: 0;
+}
+
+.weekdayLabel {
+  width: 24px;
+  height: 11px;
+  line-height: 11px;
+  font-size: 9px;
+  color: #aaa;
+  text-align: right;
+  padding-right: 3px;
+  user-select: none;
+}
+
+.grid {
+  display: flex;
+  gap: 3px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  cursor: default;
+  transition: outline 0.1s;
+}
+
+.cell:hover {
+  outline: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.legendLabel {
+  font-size: 10px;
+  color: #888;
+}
+
+.legendCell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+}

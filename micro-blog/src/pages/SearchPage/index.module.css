@@ -1,0 +1,31 @@
+.page {
+  max-width: 680px;
+}
+
+.filterBar {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchBtn {
+  background-color: #52c41a !important;
+  border-color: #52c41a !important;
+}
+
+.searchBtn:hover {
+  background-color: #73d13d !important;
+  border-color: #73d13d !important;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}

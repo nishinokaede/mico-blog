@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: micowb-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 3Bj1Pj6JqtDYpKwi7wZi9rL1
+      POSTGRES_DB: densu_backend
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  init-db:
+    build:
+      context: ./densu-backend
+      dockerfile: Dockerfile
+    container_name: micowb-init-db
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 3Bj1Pj6JqtDYpKwi7wZi9rL1
+      DB_NAME: densu_backend
+      DB_MINSIZE: 1
+      DB_MAXSIZE: 5
+      DB_ECHO: "False"
+      TOKEN_SECRET_KEY: A60yTKcunScQheM6sdNKBE6Exct5dQUil+Ev9Rxh/T75X99BYAEa8Aj5EcvcVSiB
+    command: python scripts/init_default_user.py
+
+  backend:
+    build:
+      context: ./densu-backend
+      dockerfile: Dockerfile
+    container_name: micowb-backend
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: 3Bj1Pj6JqtDYpKwi7wZi9rL1
+      DB_NAME: densu_backend
+      DB_MINSIZE: 5
+      DB_MAXSIZE: 20
+      DB_ECHO: "False"
+      TOKEN_SECRET_KEY: A60yTKcunScQheM6sdNKBE6Exct5dQUil+Ev9Rxh/T75X99BYAEa8Aj5EcvcVSiB
+      R2_API_KEY: ""
+      R2_API_SECRET: ""
+      R2_REGION: ""
+      R2_BUCKET_NAME: ""
+      R2_BUCKET_URL: ""
+      R2_BASE_URL: ""
+    ports:
+      - "8005:8005"
+
+  frontend:
+    build:
+      context: ./micro-blog
+      dockerfile: Dockerfile
+    container_name: micowb-frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_TARGET: http://backend:8005
+    ports:
+      - "5173:5173"
+
+volumes:
+  pgdata:

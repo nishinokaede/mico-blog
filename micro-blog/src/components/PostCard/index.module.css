@@ -1,0 +1,175 @@
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #888;
+  flex-wrap: wrap;
+}
+
+.date {
+  color: #999;
+}
+
+.author {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.visibility {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.visibilityText {
+  font-size: 12px;
+}
+
+.views {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.moreBtn {
+  cursor: pointer;
+  color: #999;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.moreBtn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.content {
+  margin-bottom: 12px;
+}
+
+.images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* ── 视频播放器 ── */
+
+.videoWrapper {
+  position: relative;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+}
+
+.videoEl {
+  width: 100%;
+  display: block;
+  max-height: 480px;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  transition: background 0.2s;
+}
+
+.videoOverlay:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.playIcon {
+  font-size: 48px;
+  color: rgba(255, 255, 255, 0.85);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  transition: transform 0.2s, color 0.2s;
+}
+
+.videoOverlay:hover .playIcon {
+  transform: scale(1.1);
+  color: #fff;
+}
+
+.videoControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+}
+
+.controlBtn {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.controlBtn:hover {
+  color: #fff;
+}
+
+.speedSelect {
+  width: 72px;
+}
+
+.speedSelect :global(.ant-select-selector) {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: transparent !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.speedSelect :global(.ant-select-arrow) {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.tag {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.tag:hover {
+  opacity: 0.8;
+}

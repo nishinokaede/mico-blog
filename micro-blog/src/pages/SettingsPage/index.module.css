@@ -1,0 +1,57 @@
+.page {
+  max-width: 680px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 16px 24px;
+}
+
+.tabContent {
+  padding: 16px 0;
+}
+
+.placeholder {
+  text-align: center;
+  color: #bbb;
+  padding: 40px 0;
+  font-size: 16px;
+}
+
+.form {
+  max-width: 480px;
+}
+
+.saveBtn {
+  background-color: #52c41a !important;
+  border-color: #52c41a !important;
+}
+
+.saveBtn:hover {
+  background-color: #73d13d !important;
+  border-color: #73d13d !important;
+}
+
+.devInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.devRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.devLabel {
+  color: #888;
+}
+
+.devRow a {
+  color: #1890ff;
+}
