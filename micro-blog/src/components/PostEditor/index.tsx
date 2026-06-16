@@ -217,7 +217,11 @@ const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, initialPost, loading 
         className={styles.textarea}
         autoSize={{ minRows: 4, maxRows: 10 }}
         ref={(ref: any) => {
-          textAreaRef.current = ref?.resizableTextArea?.textArea ?? null;
+          if (ref?.resizableTextArea?.textArea) {
+            (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = ref.resizableTextArea.textArea;
+          } else {
+            (textAreaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = null;
+          }
         }}
       />
 
