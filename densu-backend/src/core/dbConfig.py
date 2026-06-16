@@ -18,6 +18,7 @@ TORTOISE_ORM = {
                 "database": os.getenv("DB_NAME"),
                 "minsize": int(os.getenv("DB_MINSIZE", 1)),
                 "maxsize": int(os.getenv("DB_MAXSIZE", 5)),
+                "ssl": False,
             },
             "echo": os.getenv("DB_ECHO", "False").lower() == "true"
         }
