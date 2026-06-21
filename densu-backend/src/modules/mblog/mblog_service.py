@@ -6,6 +6,7 @@ from tortoise.expressions import Q
 
 from src.core.interfaces.response import response
 from src.core.log_config import error_logger, system_logger
+from src.core.security import BcryptPasswordManager
 from src.utils.r2_upload import R2Uploader
 from src.modules.mblog.models.post import MblogPost
 from src.modules.mblog.schemas.post import (
@@ -328,6 +329,9 @@ class MblogService:
             user.email = update_data["email"]
         if bio is not None:
             user.description = bio
+        if password:
+            pwd_manager = BcryptPasswordManager()
+            user.password = pwd_manager.hash_password(password)
 
         try:
             await user.save()

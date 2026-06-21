@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Tabs, Form, Input, Button, Select, Table, message,
   Popconfirm, Upload, Avatar,
@@ -52,7 +53,8 @@ async function avatarUpload(file: RcFile): Promise<string> {
 }
 
 const SettingsPage: React.FC = () => {
-  const { user, updateUser, tags, refreshTags, refreshPosts } = useAppStore();
+  const { user, updateUser, tags, refreshTags, refreshPosts, logout } = useAppStore();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar || '');
@@ -62,7 +64,13 @@ const SettingsPage: React.FC = () => {
     try {
       await saveUserProfile({ ...values, avatar: avatarUrl });
       await updateUser({ ...values, avatar: avatarUrl });
-      message.success('保存成功');
+      if (values.password) {
+        message.success('密码已修改，请重新登录');
+        logout();
+        navigate('/login');
+      } else {
+        message.success('保存成功');
+      }
     } finally {
       setSaving(false);
     }
