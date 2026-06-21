@@ -9,6 +9,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     allowedHosts: ['.densu.cc'],
+    hmr: {
+      protocol: 'wss',
+      host: 'densu.cc',
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_TARGET || 'http://127.0.0.1:8005',
