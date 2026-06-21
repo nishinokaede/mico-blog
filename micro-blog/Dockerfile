@@ -3,8 +3,8 @@ FROM node:20-alpine
 WORKDIR /app
 
 # 复制依赖文件
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 
 # 复制源代码
 COPY . .
