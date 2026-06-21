@@ -10,7 +10,7 @@ import TagList from '../components/TagList';
 import styles from './RightSidebar.module.css';
 
 const RightSidebar: React.FC = () => {
-  const { user, posts, tags, auth } = useAppStore();
+  const { user, posts, tags } = useAppStore();
   const navigate = useNavigate();
 
   const heatmapData = useMemo(() => {

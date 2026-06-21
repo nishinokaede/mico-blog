@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Tabs, Form, Input, Button, Select, Table, message,
-  Popconfirm, Space, Upload, Avatar,
+  Popconfirm, Upload, Avatar,
 } from 'antd';
 import { DeleteOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
 import ImgCrop from 'antd-img-crop';

@@ -4,11 +4,9 @@ import {
   PictureOutlined,
   VideoCameraOutlined,
   SmileOutlined,
-  FullscreenOutlined,
   FileTextOutlined,
   CloseOutlined,
   LoadingOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
 import { Post, Visibility } from '../../types';
 import request from '../../utils/request';
@@ -126,9 +124,9 @@ const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, initialPost, loading 
     }
   }, [content]);
 
-  const handlePlaceholder = () => {
-    message.info('功能开发中');
-  };
+//   const handlePlaceholder = () => {
+//     message.info('功能开发中');
+//   };
 
   const handleSelectImages = () => {
     fileInputRef.current?.click();

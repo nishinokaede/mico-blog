@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Select, Input, DatePicker, Button, Space } from 'antd';
+import { Select, Input, DatePicker, Button } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Post, SearchParams, Visibility } from '../../types';
