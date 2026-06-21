@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Post, User, Tag, AuthState } from '../types';
+import { Post, User, Tag, AuthState, SiteConfig } from '../types';
 import { getPosts, createPost, updatePost, deletePost } from '../api/post';
 import { getTags } from '../api/tag';
-import { getUser, isLoggedIn as checkLogin, getAuthToken, logout as doLogout } from '../api/user';
+import { getUser, isLoggedIn as checkLogin, getAuthToken, logout as doLogout, getSiteConfig } from '../api/user';
 
 interface AppContextType {
   user: User | null;
@@ -10,9 +10,11 @@ interface AppContextType {
   tags: Tag[];
   loading: boolean;
   auth: AuthState;
+  siteConfig: SiteConfig;
   refreshPosts: () => Promise<void>;
   refreshTags: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  refreshSiteConfig: () => Promise<void>;
   addPost: (post: Omit<Post, 'id' | 'createdAt' | 'views'>) => Promise<Post>;
   editPost: (id: number, data: Partial<Post>) => Promise<void>;
   removePost: (id: number) => Promise<void>;
@@ -32,6 +34,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     token: getAuthToken(),
     isLoggedIn: checkLogin(),
     username: null,
+  });
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>({
+    logo_url: null,
+    site_title: null,
   });
 
   const refreshPosts = useCallback(async () => {
@@ -65,6 +71,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('获取用户信息失败', e);
     }
   }, [auth.isLoggedIn]);
+
+  const refreshSiteConfig = useCallback(async () => {
+    try {
+      const data = await getSiteConfig();
+      setSiteConfig(data);
+    } catch (e) {
+      console.error('获取系统设置失败', e);
+    }
+  }, []);
 
   const addPost = useCallback(async (data: Omit<Post, 'id' | 'createdAt' | 'views'>): Promise<Post> => {
     const newPost = await createPost(data);
@@ -111,6 +126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const init = async () => {
       setLoading(true);
+      await refreshSiteConfig();
       if (auth.isLoggedIn) {
         await refreshUser();
       }
@@ -129,9 +145,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         tags,
         loading,
         auth,
+        siteConfig,
         refreshPosts,
         refreshTags,
         refreshUser,
+        refreshSiteConfig,
         addPost,
         editPost,
         removePost,

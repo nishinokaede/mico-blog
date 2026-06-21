@@ -10,6 +10,7 @@ from src.modules.mblog.schemas.post import (
     PostUpdate,
     PostSearchParams,
     UserProfileUpdate,
+    SiteConfigUpdate,
 )
 from src.modules.user.schemas.user import UserInDB
 
@@ -152,6 +153,19 @@ class MblogController:
             current_user: UserInDB = Depends(get_current_user),
         ):
             return await MblogService.update_user_profile(data, current_user=current_user)
+
+        # ── 系统设置（读取公开，写入需登录） ──────────────────
+
+        @self.router.get("/site-config", summary="获取系统设置")
+        async def get_site_config():
+            return await MblogService.get_site_config()
+
+        @self.router.put("/site-config", summary="更新系统设置")
+        async def update_site_config(
+            data: SiteConfigUpdate,
+            current_user: UserInDB = Depends(get_current_user),
+        ):
+            return await MblogService.update_site_config(data)
 
 
 # ✅ 显式暴露 router（auto-routing 机制依赖此变量）

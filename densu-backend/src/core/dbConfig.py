@@ -31,6 +31,7 @@ TORTOISE_ORM = {
                 'src.modules.common.models.api_log',
                 'src.modules.common.models.upload_file',
                 'src.modules.mblog.models.post',
+                'src.modules.mblog.models.site_config',
                 'src.modules.queue.models.queue',
             ],
             "default_connection": "default",

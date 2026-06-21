@@ -312,7 +312,7 @@ const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, initialPost, loading 
             trigger="click"
             open={emojiOpen}
             onOpenChange={setEmojiOpen}
-            destroyTooltipOnHide
+            destroyOnHidden
           >
             <Button
               size="small"

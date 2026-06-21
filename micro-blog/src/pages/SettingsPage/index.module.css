@@ -55,3 +55,31 @@
 .devRow a {
   color: #1890ff;
 }
+
+.unauth {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.unauthIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.unauthText {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+.unauthActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.unauthTimer {
+  font-size: 13px;
+  color: #aaa;
+}

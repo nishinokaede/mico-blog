@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Tabs, Form, Input, Button, Select, Table, message,
-  Popconfirm, Upload, Avatar,
+  Popconfirm, Upload, Avatar, Image,
 } from 'antd';
-import { DeleteOutlined, UploadOutlined, UserOutlined } from '@ant-design/icons';
+import { DeleteOutlined, UploadOutlined, UserOutlined, PictureOutlined } from '@ant-design/icons';
 import ImgCrop from 'antd-img-crop';
 import type { UploadFile, RcFile } from 'antd/es/upload/interface';
 import { useAppStore } from '../../store';
 import { User } from '../../types';
 import { deleteTag } from '../../api/tag';
-import { saveUserProfile } from '../../api/user';
+import { saveUserProfile, saveSiteConfig } from '../../api/user';
 import request from '../../utils/request';
 import styles from './index.module.css';
 
@@ -53,11 +53,42 @@ async function avatarUpload(file: RcFile): Promise<string> {
 }
 
 const SettingsPage: React.FC = () => {
-  const { user, updateUser, tags, refreshTags, refreshPosts, logout } = useAppStore();
+  const { user, updateUser, tags, refreshTags, refreshPosts, logout, siteConfig, refreshSiteConfig, auth } = useAppStore();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar || '');
+
+  // ── 未登录倒计时 ──
+  const [countdown, setCountdown] = useState(3);
+
+  useEffect(() => {
+    if (auth.isLoggedIn) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate('/login');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [auth.isLoggedIn, navigate]);
+
+  // ── 系统设置状态 ──
+  const [logoSaving, setLogoSaving] = useState(false);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string>(siteConfig?.logo_url || '');
+  const [siteTitle, setSiteTitle] = useState<string>(siteConfig?.site_title || '');
+
+  useEffect(() => {
+    if (siteConfig) {
+      setLogoUrl(siteConfig.logo_url || '');
+      setSiteTitle(siteConfig.site_title || '');
+    }
+  }, [siteConfig]);
 
   const handleUserSave = async (values: User) => {
     setSaving(true);
@@ -98,6 +129,36 @@ const SettingsPage: React.FC = () => {
     if (info.file.status === 'error') {
       setUploading(false);
       message.error(info.file.error?.message || '头像上传失败');
+    }
+  };
+
+  /** 处理 Logo 上传 */
+  const handleLogoChange = async (info: { file: UploadFile }) => {
+    if (info.file.status === 'uploading') {
+      setLogoUploading(true);
+      return;
+    }
+    if (info.file.status === 'done') {
+      const url = info.file.response as string;
+      setLogoUrl(url);
+      setLogoUploading(false);
+      message.success('Logo 上传成功');
+    }
+    if (info.file.status === 'error') {
+      setLogoUploading(false);
+      message.error(info.file.error?.message || 'Logo 上传失败');
+    }
+  };
+
+  /** 保存系统设置 */
+  const handleSystemSave = async () => {
+    setLogoSaving(true);
+    try {
+      await saveSiteConfig({ logo_url: logoUrl, site_title: siteTitle });
+      await refreshSiteConfig();
+      message.success('系统设置保存成功');
+    } finally {
+      setLogoSaving(false);
     }
   };
 
@@ -191,7 +252,73 @@ const SettingsPage: React.FC = () => {
       label: '系统设置',
       children: (
         <div className={styles.tabContent}>
-          <div className={styles.placeholder}>功能开发中</div>
+          <Form
+            layout="vertical"
+            className={styles.form}
+          >
+            {/* Logo 上传 */}
+            <Form.Item label="网站图标 (Logo)">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                {logoUrl ? (
+                  <Image
+                    src={logoUrl}
+                    width={64}
+                    height={64}
+                    style={{ borderRadius: 8, objectFit: 'cover' }}
+                    preview={{ mask: '预览' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 64, height: 64, borderRadius: 8,
+                    background: '#f5f5f5', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <PictureOutlined style={{ fontSize: 24, color: '#bbb' }} />
+                  </div>
+                )}
+                <ImgCrop
+                  rotationSlider
+                  aspect={1}
+                  quality={0.9}
+                  modalTitle="裁剪 Logo"
+                >
+                  <Upload
+                    accept="image/*"
+                    showUploadList={false}
+                    customRequest={customUpload as never}
+                    onChange={handleLogoChange}
+                  >
+                    <Button
+                      icon={<UploadOutlined />}
+                      loading={logoUploading}
+                    >
+                      {logoUploading ? '上传中' : logoUrl ? '更换 Logo' : '上传 Logo'}
+                    </Button>
+                  </Upload>
+                </ImgCrop>
+              </div>
+            </Form.Item>
+
+            {/* 网站标题 */}
+            <Form.Item label="网站标题">
+              <Input
+                placeholder="Micro Blog"
+                value={siteTitle}
+                onChange={(e) => setSiteTitle(e.target.value)}
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                loading={logoSaving}
+                onClick={handleSystemSave}
+                className={styles.saveBtn}
+              >
+                保存系统设置
+              </Button>
+            </Form.Item>
+          </Form>
         </div>
       ),
     },
@@ -306,7 +433,23 @@ const SettingsPage: React.FC = () => {
   return (
     <div className={styles.page}>
       <div className={styles.card}>
-        <Tabs items={tabItems} />
+        {auth.isLoggedIn ? (
+          <Tabs items={tabItems} />
+        ) : (
+          <div className={styles.unauth}>
+            <div className={styles.unauthIcon}>🔒</div>
+            <div className={styles.unauthText}>请先登录后访问设置页面</div>
+            <div className={styles.unauthActions}>
+              <Button onClick={() => navigate('/')}>返回首页</Button>
+              <Button type="primary" onClick={() => navigate('/login')}>
+                去登录
+              </Button>
+            </div>
+            <div className={styles.unauthTimer}>
+              {countdown > 0 ? `${countdown} 秒后自动跳转登录…` : '正在跳转…'}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

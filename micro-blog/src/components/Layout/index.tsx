@@ -28,9 +28,26 @@ const navItems = [
 const Layout: React.FC<LayoutProps> = ({ children, sidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { auth, logout } = useAppStore();
+  const { auth, logout, siteConfig } = useAppStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [version, setVersion] = useState('0.0.1');
+
+  const displayTitle = siteConfig?.site_title || 'Micro Blog';
+  const displayLogo = siteConfig?.logo_url;
+
+  useEffect(() => {
+    document.title = displayTitle;
+  }, [displayTitle]);
+
+  useEffect(() => {
+    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = displayLogo || '/favicon.ico';
+  }, [displayLogo]);
 
   useEffect(() => {
     import('../../../package.json')
@@ -62,7 +79,13 @@ const Layout: React.FC<LayoutProps> = ({ children, sidebar }) => {
   return (
     <div className={styles.layout}>
       <aside className={`${styles.leftSidebar} ${mobileMenuOpen ? styles.mobileOpen : ''}`}>
-        <div className={styles.logo}>MB</div>
+        <div className={styles.logo}>
+          {displayLogo ? (
+            <img src={displayLogo} alt="Logo" className={styles.logoImg} />
+          ) : (
+            displayTitle.slice(0, 2).toUpperCase()
+          )}
+        </div>
 
         {auth.isLoggedIn && (
           <div className={styles.userBadge}>
@@ -77,11 +100,7 @@ const Layout: React.FC<LayoutProps> = ({ children, sidebar }) => {
               key={item.path}
               className={`${styles.navItem} ${location.pathname === item.path ? styles.active : ''}`}
               onClick={() => {
-                if (item.path === '/settings' && !auth.isLoggedIn) {
-                  navigate('/login');
-                } else {
-                  navigate(item.path);
-                }
+                navigate(item.path);
                 setMobileMenuOpen(false);
               }}
               title={item.label}
@@ -152,7 +171,7 @@ const Layout: React.FC<LayoutProps> = ({ children, sidebar }) => {
           <span className={styles.hamburger} onClick={() => setMobileMenuOpen((prev) => !prev)}>
             <MenuOutlined />
           </span>
-          <span className={styles.mobileLogo}>Micro Blog</span>
+          <span className={styles.mobileLogo}>{displayTitle}</span>
         </div>
         {children}
       </main>

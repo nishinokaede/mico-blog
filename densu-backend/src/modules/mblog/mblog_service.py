@@ -16,9 +16,11 @@ from src.modules.mblog.schemas.post import (
     PostSearchParams,
     StatsResponse,
     UserProfileUpdate,
+    SiteConfigUpdate,
 )
 from src.modules.user.models import User
 from src.modules.user.schemas.user import UserInDB
+from src.modules.mblog.models.site_config import SiteConfig
 
 
 def _get_user_id(current_user: Optional[UserInDB]) -> Optional[str]:
@@ -338,4 +340,32 @@ class MblogService:
             return response(message="保存成功")
         except Exception as e:
             error_logger.error(f"更新用户配置失败: {str(e)}")
+            return response(code=500, message=f"保存失败: {str(e)}")
+
+    # ── 系统设置 ──────────────────────────────────────────
+
+    @staticmethod
+    async def get_site_config():
+        config = await SiteConfig.first()
+        if not config:
+            return response(data={"logo_url": None, "site_title": None})
+        return response(data={
+            "logo_url": config.logo_url,
+            "site_title": config.site_title,
+        })
+
+    @staticmethod
+    async def update_site_config(data: SiteConfigUpdate):
+        config = await SiteConfig.first()
+        if not config:
+            config = SiteConfig()
+        if data.logo_url is not None:
+            config.logo_url = data.logo_url
+        if data.site_title is not None:
+            config.site_title = data.site_title
+        try:
+            await config.save()
+            return response(message="系统设置保存成功")
+        except Exception as e:
+            error_logger.error(f"更新系统设置失败: {str(e)}")
             return response(code=500, message=f"保存失败: {str(e)}")

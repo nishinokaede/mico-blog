@@ -37,3 +37,8 @@ export interface AuthState {
   isLoggedIn: boolean;
   username: string | null;
 }
+
+export interface SiteConfig {
+  logo_url: string | null;
+  site_title: string | null;
+}

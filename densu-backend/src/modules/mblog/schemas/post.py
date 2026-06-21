@@ -98,3 +98,13 @@ class UserProfileUpdate(BaseModel):
     bio: Optional[str] = Field(default=None, description="个人介绍")
     default_visibility: Optional[str] = Field(default=None, description="默认可见性")
     password: Optional[str] = Field(default=None, description="新密码，留空不修改")
+
+
+# ── 系统设置更新 ──────────────────────────────────────────
+
+class SiteConfigUpdate(BaseModel):
+    """
+    更新系统设置的请求体。
+    """
+    logo_url: Optional[str] = Field(default=None, description="网站图标 URL")
+    site_title: Optional[str] = Field(default=None, description="网站标题")
