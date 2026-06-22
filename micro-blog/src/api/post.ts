@@ -17,7 +17,11 @@ interface PostRaw {
   video?: string;
   visibility: string;
   views: number;
+  ip_address?: string;
+  device?: string;
   user_id: string;
+  is_pinned?: boolean;
+  pinned_at?: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,7 +36,11 @@ function toPost(raw: PostRaw): Post {
     video: raw.video || undefined,
     visibility: raw.visibility as Post['visibility'],
     views: raw.views,
+    ip_address: raw.ip_address,
+    device: raw.device,
     createdAt: raw.created_at,
+    isPinned: raw.is_pinned || false,
+    pinnedAt: raw.pinned_at,
   };
 }
 
@@ -45,11 +53,19 @@ async function unwrap<T>(promise: Promise<{ data: ApiResponse<T> }>): Promise<T>
   return res.data.data;
 }
 
-export async function getPosts(): Promise<Post[]> {
-  const raw = await unwrap<PostRaw[]>(request.get('/mblog/posts'));
-  return raw.map(toPost).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+interface PostsResponse {
+  list: PostRaw[];
+  total: number;
+}
+
+export async function getPosts(page = 1, pageSize = 20): Promise<{ list: Post[]; total: number }> {
+  const raw = await unwrap<PostsResponse>(
+    request.get('/mblog/posts', { params: { page, page_size: pageSize } })
   );
+  return {
+    list: raw.list.map(toPost),
+    total: raw.total,
+  };
 }
 
 export async function getPostById(id: number): Promise<Post | undefined> {
@@ -97,6 +113,11 @@ export async function deletePost(id: number): Promise<boolean> {
   }
 }
 
+export async function togglePinPost(id: number): Promise<Post> {
+  const raw = await unwrap<PostRaw>(request.post(`/mblog/posts/${id}/toggle-pin`));
+  return toPost(raw);
+}
+
 export async function searchPosts(params: SearchParams): Promise<Post[]> {
   const queryParams: Record<string, string> = {};
   if (params.tag) queryParams.tag = params.tag;
@@ -110,7 +131,13 @@ export async function searchPosts(params: SearchParams): Promise<Post[]> {
   const raw = await unwrap<PostRaw[]>(
     request.get('/mblog/search', { params: queryParams })
   );
-  return raw.map(toPost).sort(
+  const list = raw.map(toPost);
+  // 置顶帖在最前，其余按创建时间倒序
+  const pinned = list.filter((p) => p.isPinned).sort(
+    (a, b) => new Date(b.pinnedAt || '').getTime() - new Date(a.pinnedAt || '').getTime()
+  );
+  const unpinned = list.filter((p) => !p.isPinned).sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+  return [...pinned, ...unpinned];
 }

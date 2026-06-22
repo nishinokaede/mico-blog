@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -42,10 +42,14 @@ class MblogController:
         @self.router.get("/posts", summary="获取帖子列表")
         async def list_posts(
             visibility: Optional[str] = Query(default=None),
+            page: int = Query(default=1, ge=1, description="页码"),
+            page_size: int = Query(default=20, ge=1, le=100, description="每页数量"),
             current_user: Optional[UserInDB] = Depends(get_optional_user),
         ):
             return await MblogService.get_posts(
                 visibility=visibility,
+                page=page,
+                page_size=page_size,
                 current_user=current_user,
             )
 
@@ -61,9 +65,10 @@ class MblogController:
         @self.router.post("/posts", summary="发布帖子")
         async def create_post(
             data: PostCreate,
+            request: Request,
             current_user: UserInDB = Depends(get_current_user),
         ):
-            return await MblogService.create_post(data, current_user=current_user)
+            return await MblogService.create_post(data, current_user=current_user, request=request)
 
         @self.router.put("/posts/{post_id}", summary="更新帖子")
         async def update_post(
@@ -79,6 +84,15 @@ class MblogController:
             current_user: UserInDB = Depends(get_current_user),
         ):
             return await MblogService.delete_post(post_id, current_user=current_user)
+
+        # ── 置顶/取消置顶（必须登录） ─────────────────────────
+
+        @self.router.post("/posts/{post_id}/toggle-pin", summary="置顶/取消置顶帖子")
+        async def toggle_pin(
+            post_id: int,
+            current_user: UserInDB = Depends(get_current_user),
+        ):
+            return await MblogService.toggle_pin(post_id, current_user=current_user)
 
         # ── 搜索（可选认证） ───────────────────────────────────
 

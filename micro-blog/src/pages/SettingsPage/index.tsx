@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Tabs, Form, Input, Button, Select, Table, message,
-  Popconfirm, Upload, Avatar, Image,
+  Popconfirm, Upload, Avatar, Image, Switch,
 } from 'antd';
 import { DeleteOutlined, UploadOutlined, UserOutlined, PictureOutlined } from '@ant-design/icons';
 import ImgCrop from 'antd-img-crop';
@@ -82,11 +82,13 @@ const SettingsPage: React.FC = () => {
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string>(siteConfig?.logo_url || '');
   const [siteTitle, setSiteTitle] = useState<string>(siteConfig?.site_title || '');
+  const [showIpDevice, setShowIpDevice] = useState<boolean>(siteConfig?.show_ip_device ?? false);
 
   useEffect(() => {
     if (siteConfig) {
       setLogoUrl(siteConfig.logo_url || '');
       setSiteTitle(siteConfig.site_title || '');
+      setShowIpDevice(siteConfig.show_ip_device ?? false);
     }
   }, [siteConfig]);
 
@@ -154,7 +156,7 @@ const SettingsPage: React.FC = () => {
   const handleSystemSave = async () => {
     setLogoSaving(true);
     try {
-      await saveSiteConfig({ logo_url: logoUrl, site_title: siteTitle });
+      await saveSiteConfig({ logo_url: logoUrl, site_title: siteTitle, show_ip_device: showIpDevice });
       await refreshSiteConfig();
       message.success('系统设置保存成功');
     } finally {
@@ -306,6 +308,19 @@ const SettingsPage: React.FC = () => {
                 value={siteTitle}
                 onChange={(e) => setSiteTitle(e.target.value)}
               />
+            </Form.Item>
+
+            {/* 展示发帖IP和设备 */}
+            <Form.Item label="展示发帖IP和设备">
+              <Switch
+                checked={showIpDevice}
+                onChange={setShowIpDevice}
+                checkedChildren="开"
+                unCheckedChildren="关"
+              />
+              <span style={{ marginLeft: 8, color: '#999', fontSize: 13 }}>
+                开启后，卡片上将显示发帖时的IP地理位置与终端设备信息
+              </span>
             </Form.Item>
 
             <Form.Item>

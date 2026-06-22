@@ -2,12 +2,14 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional, List
 
+from fastapi import Request
 from tortoise.expressions import Q
 
 from src.core.interfaces.response import response
 from src.core.log_config import error_logger, system_logger
 from src.core.security import BcryptPasswordManager
 from src.utils.r2_upload import R2Uploader
+from src.utils.ip_geo import get_ip_geo, parse_user_agent
 from src.modules.mblog.models.post import MblogPost
 from src.modules.mblog.schemas.post import (
     PostCreate,
@@ -55,18 +57,30 @@ class MblogService:
     async def get_posts(
         visibility: Optional[str] = None,
         current_user: Optional[UserInDB] = None,
-        limit: int = 100,
-        offset: int = 0,
+        page: int = 1,
+        page_size: int = 20,
     ):
         uid = _get_user_id(current_user) or MblogService.DEFAULT_USER
         query = Q(user_id=uid)
         if visibility:
             query &= Q(visibility=visibility)
 
-        posts = await MblogPost.filter(query).offset(offset).limit(limit).order_by("-created_at")
-        visible_posts = _visible_to(posts, current_user)
-        post_list = [PostInDB.model_validate(p) for p in visible_posts]
-        return response(data=post_list)
+        all_posts = await MblogPost.filter(query).order_by("-created_at")
+        visible_posts = _visible_to(all_posts, current_user)
+        # 置顶帖排在最前，置顶之间按 pinned_at 倒序；非置顶按 created_at 倒序
+        pinned = sorted(
+            [p for p in visible_posts if p.is_pinned],
+            key=lambda p: p.pinned_at or datetime.min,
+            reverse=True,
+        )
+        unpinned = [p for p in visible_posts if not p.is_pinned]
+        visible_posts = pinned + unpinned
+        total = len(visible_posts)
+
+        offset = (page - 1) * page_size
+        page_posts = visible_posts[offset:offset + page_size]
+        post_list = [PostInDB.model_validate(p) for p in page_posts]
+        return response(data={"list": post_list, "total": total})
 
     @staticmethod
     async def get_post_by_id(post_id: int, current_user: Optional[UserInDB] = None):
@@ -81,8 +95,20 @@ class MblogService:
         return response(data=PostInDB.model_validate(post))
 
     @staticmethod
-    async def create_post(data: PostCreate, current_user: UserInDB):
+    async def create_post(data: PostCreate, current_user: UserInDB, request: Request):
         uid = current_user.username or MblogService.DEFAULT_USER
+
+        # 获取客户端 IP（优先取 X-Forwarded-For / X-Real-IP 头，因为可能经过反向代理）
+        client_ip = (
+            request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            or request.headers.get("X-Real-IP", "")
+            or (request.client.host if request.client else None)
+        )
+        ua = request.headers.get("User-Agent", "")
+        device_info = parse_user_agent(ua) if ua else None
+
+        ip_location = get_ip_geo(client_ip) if client_ip else None
+
         try:
             post = await MblogPost.create(
                 content=data.content,
@@ -91,6 +117,8 @@ class MblogService:
                 video=data.video,
                 visibility=data.visibility or "public",
                 user_id=uid,
+                ip_address=ip_location,
+                device=device_info,
             )
             return response(data=PostInDB.model_validate(post), message="发布成功")
         except Exception as e:
@@ -131,6 +159,36 @@ class MblogService:
             error_logger.error(f"删除帖子失败: {str(e)}")
             return response(code=500, message=f"删除失败: {str(e)}")
 
+    # ── 置顶/取消置顶 ─────────────────────────────────────
+
+    MAX_PINNED = 3
+
+    @staticmethod
+    async def toggle_pin(post_id: int, current_user: UserInDB):
+        post = await MblogPost.get_or_none(id=post_id)
+        if not post:
+            return response(code=404, message="帖子不存在")
+        if post.user_id != current_user.username:
+            return response(code=403, message="无权操作他人帖子")
+
+        if post.is_pinned:
+            # 取消置顶
+            post.is_pinned = False
+            post.pinned_at = None
+            await post.save()
+            return response(data=PostInDB.model_validate(post), message="已取消置顶")
+
+        # 置顶：检查是否已达上限
+        uid = current_user.username or MblogService.DEFAULT_USER
+        pinned_count = await MblogPost.filter(user_id=uid, is_pinned=True).count()
+        if pinned_count >= MblogService.MAX_PINNED:
+            return response(code=400, message=f"最多只能置顶 {MblogService.MAX_PINNED} 条帖子")
+
+        post.is_pinned = True
+        post.pinned_at = datetime.now()
+        await post.save()
+        return response(data=PostInDB.model_validate(post), message="置顶成功")
+
     # ── 搜索 ──────────────────────────────────────────────
 
     @staticmethod
@@ -164,6 +222,14 @@ class MblogService:
             posts = [p for p in posts if params.tag in (p.tags or [])]
 
         visible_posts = _visible_to(posts, current_user)
+        # 置顶帖排在最前
+        pinned = sorted(
+            [p for p in visible_posts if p.is_pinned],
+            key=lambda p: p.pinned_at or datetime.min,
+            reverse=True,
+        )
+        unpinned = [p for p in visible_posts if not p.is_pinned]
+        visible_posts = pinned + unpinned
         post_list = [PostInDB.model_validate(p) for p in visible_posts]
         return response(data=post_list)
 
@@ -348,10 +414,11 @@ class MblogService:
     async def get_site_config():
         config = await SiteConfig.first()
         if not config:
-            return response(data={"logo_url": None, "site_title": None})
+            return response(data={"logo_url": None, "site_title": None, "show_ip_device": False})
         return response(data={
             "logo_url": config.logo_url,
             "site_title": config.site_title,
+            "show_ip_device": config.show_ip_device,
         })
 
     @staticmethod
@@ -363,6 +430,8 @@ class MblogService:
             config.logo_url = data.logo_url
         if data.site_title is not None:
             config.site_title = data.site_title
+        if data.show_ip_device is not None:
+            config.show_ip_device = data.show_ip_device
         try:
             await config.save()
             return response(message="系统设置保存成功")

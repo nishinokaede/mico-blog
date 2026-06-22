@@ -48,10 +48,35 @@
   font-size: 12px;
 }
 
-.views {
+.headerRight {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pinBtn {
+  cursor: pointer;
+  color: #999;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.pinBtn:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.pinBtnActive {
+  color: #fa541c;
+}
+
+.pinBtnActive:hover {
+  color: #d4380d;
 }
 
 .moreBtn {
@@ -69,6 +94,12 @@
 
 .content {
   margin-bottom: 12px;
+}
+
+.deviceItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .images {

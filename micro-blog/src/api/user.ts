@@ -109,12 +109,12 @@ export async function saveUserProfile(user: User): Promise<User> {
 }
 
 /** 获取系统设置（无需登录） */
-export async function getSiteConfig(): Promise<{ logo_url: string | null; site_title: string | null }> {
+export async function getSiteConfig(): Promise<{ logo_url: string | null; site_title: string | null; show_ip_device: boolean }> {
   const res = await request.get('/mblog/site-config');
   return res.data.data;
 }
 
 /** 保存系统设置 */
-export async function saveSiteConfig(data: { logo_url?: string; site_title?: string }): Promise<void> {
+export async function saveSiteConfig(data: { logo_url?: string; site_title?: string; show_ip_device?: boolean }): Promise<void> {
   await unwrap<null>(request.put('/mblog/site-config', data));
 }

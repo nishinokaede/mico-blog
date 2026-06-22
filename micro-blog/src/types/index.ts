@@ -8,7 +8,11 @@ export interface Post {
   video?: string;
   visibility: Visibility;
   views: number;
+  ip_address?: string;
+  device?: string;
   createdAt: string;
+  isPinned: boolean;
+  pinnedAt?: string;
 }
 
 export interface User {
@@ -41,4 +45,5 @@ export interface AuthState {
 export interface SiteConfig {
   logo_url: string | null;
   site_title: string | null;
+  show_ip_device: boolean;
 }

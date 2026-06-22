@@ -4,9 +4,10 @@ import {
   EditOutlined,
   DeleteOutlined,
   LinkOutlined,
-  EyeOutlined,
   LockOutlined,
   GlobalOutlined,
+  EnvironmentOutlined,
+  LaptopOutlined,
   EllipsisOutlined,
   DownloadOutlined,
   LeftOutlined,
@@ -23,6 +24,7 @@ import {
   MutedOutlined,
   FullscreenOutlined,
   FullscreenExitOutlined,
+  PushpinOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Post } from '../../types';
@@ -32,12 +34,15 @@ import styles from './index.module.css';
 interface PostCardProps {
   post: Post;
   nickname: string;
+  isLoggedIn: boolean;
+  showIpDevice: boolean;
   onEdit: (post: Post) => void;
   onDelete: (id: number) => void;
   onTagClick: (tag: string) => void;
+  onTogglePin?: (id: number) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, nickname, onEdit, onDelete, onTagClick }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, nickname, isLoggedIn, showIpDevice, onEdit, onDelete, onTagClick, onTogglePin }) => {
   const [current, setCurrent] = useState(0);
 
   // 视频播放器状态
@@ -138,19 +143,23 @@ const PostCard: React.FC<PostCardProps> = ({ post, nickname, onEdit, onDelete, o
   };
 
   const menuItems = [
-    {
-      key: 'edit',
-      label: '编辑',
-      icon: <EditOutlined />,
-      onClick: () => onEdit(post),
-    },
-    {
-      key: 'delete',
-      label: '删除',
-      icon: <DeleteOutlined />,
-      danger: true,
-      onClick: handleDelete,
-    },
+    ...(isLoggedIn
+      ? [
+          {
+            key: 'edit',
+            label: '编辑',
+            icon: <EditOutlined />,
+            onClick: () => onEdit(post),
+          },
+          {
+            key: 'delete',
+            label: '删除',
+            icon: <DeleteOutlined />,
+            danger: true,
+            onClick: handleDelete,
+          },
+        ]
+      : []),
     {
       key: 'copyLink',
       label: '复制链接',
@@ -178,16 +187,35 @@ const PostCard: React.FC<PostCardProps> = ({ post, nickname, onEdit, onDelete, o
               {post.visibility === 'public' ? '所有人可见' : '仅自己可见'}
             </span>
           </span>
-          <span className={styles.views}>
-            <EyeOutlined style={{ marginRight: 2 }} />
-            {post.views}
-          </span>
+          {showIpDevice && post.ip_address && (
+            <span className={styles.deviceItem}>
+              <EnvironmentOutlined />
+              {post.ip_address}
+            </span>
+          )}
+          {showIpDevice && post.device && (
+            <span className={styles.deviceItem}>
+              <LaptopOutlined />
+              {post.device}
+            </span>
+          )}
         </div>
-        <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
-          <span className={styles.moreBtn}>
-            <EllipsisOutlined />
-          </span>
-        </Dropdown>
+        <div className={styles.headerRight}>
+          {isLoggedIn && onTogglePin && (
+            <span
+              className={`${styles.pinBtn} ${post.isPinned ? styles.pinBtnActive : ''}`}
+              onClick={() => onTogglePin(post.id)}
+              title={post.isPinned ? '取消置顶' : '置顶'}
+            >
+              <PushpinOutlined />
+            </span>
+          )}
+          <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+            <span className={styles.moreBtn}>
+              <EllipsisOutlined />
+            </span>
+          </Dropdown>
+        </div>
       </div>
       <div className={styles.content}>
         <MarkdownViewer content={post.content} />

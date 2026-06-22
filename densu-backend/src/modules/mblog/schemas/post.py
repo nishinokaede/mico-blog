@@ -44,11 +44,21 @@ class PostInDB(BaseModel):
     video: Optional[str] = None
     visibility: str = "public"
     views: int = 0
+    ip_address: Optional[str] = None
+    device: Optional[str] = None
     user_id: Optional[str] = None
+    is_pinned: bool = False
+    pinned_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PostListResponse(BaseModel):
+    """分页帖子列表响应"""
+    list: List[PostInDB] = Field(default_factory=list, description="帖子列表")
+    total: int = Field(default=0, description="总数")
 
 
 # ── 搜索参数 ──────────────────────────────────────────────
@@ -108,3 +118,4 @@ class SiteConfigUpdate(BaseModel):
     """
     logo_url: Optional[str] = Field(default=None, description="网站图标 URL")
     site_title: Optional[str] = Field(default=None, description="网站标题")
+    show_ip_device: Optional[bool] = Field(default=None, description="是否展示发帖IP和设备信息")

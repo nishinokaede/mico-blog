@@ -24,7 +24,11 @@ class MblogPost(Model):
     video = fields.CharField(max_length=512, null=True, description="视频URL")
     visibility = fields.CharField(max_length=16, default="public", description="可见性: public / private")
     views = fields.IntField(default=0, description="浏览次数")
+    ip_address = fields.CharField(max_length=128, null=True, description="发帖IP地理位置")
+    device = fields.CharField(max_length=256, null=True, description="发帖设备信息")
     user_id = fields.CharField(max_length=255, null=True, description="关联用户用户名")
+    is_pinned = fields.BooleanField(default=False, description="是否置顶")
+    pinned_at = fields.DatetimeField(null=True, description="置顶时间")
 
     created_at = fields.DatetimeField(auto_now_add=True, description="创建时间")
     updated_at = fields.DatetimeField(auto_now=True, description="更新时间")

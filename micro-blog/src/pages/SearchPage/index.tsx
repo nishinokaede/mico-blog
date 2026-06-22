@@ -7,14 +7,14 @@ import { Post, SearchParams, Visibility } from '../../types';
 import { useAppStore } from '../../store';
 import PostCard from '../../components/PostCard';
 import EmptyState from '../../components/EmptyState';
-import { searchPosts } from '../../api/post';
+import { searchPosts, togglePinPost } from '../../api/post';
 import styles from './index.module.css';
 
 const { RangePicker } = DatePicker;
 
 const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { tags, user } = useAppStore();
+  const { tags, user, auth, siteConfig } = useAppStore();
   const [results, setResults] = useState<Post[]>([]);
   const [searched, setSearched] = useState(false);
 
@@ -51,6 +51,23 @@ const SearchPage: React.FC = () => {
     if (tag) sp.set('tag', tag);
     setSearchParams(sp, { replace: true });
   }, [tag, visibility, content, dateRange, setSearchParams]);
+
+  const handleTogglePin = useCallback(async (id: number) => {
+    try {
+      const updated = await togglePinPost(id);
+      setResults((prev) => {
+        const others = prev.filter((p) => p.id !== id);
+        const all = [updated, ...others];
+        const pinned = all.filter((p) => p.isPinned).sort(
+          (a, b) => new Date(b.pinnedAt || '').getTime() - new Date(a.pinnedAt || '').getTime()
+        );
+        const unpinned = all.filter((p) => !p.isPinned);
+        return [...pinned, ...unpinned];
+      });
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const handleTagClick = useCallback(
     (clickedTag: string) => {
@@ -137,9 +154,12 @@ const SearchPage: React.FC = () => {
               key={post.id}
               post={post}
               nickname={user?.nickname || 'densu'}
+              isLoggedIn={auth.isLoggedIn}
+              showIpDevice={siteConfig.show_ip_device}
               onEdit={() => {}}
               onDelete={() => {}}
               onTagClick={handleTagClick}
+              onTogglePin={handleTogglePin}
             />
           ))}
         </div>

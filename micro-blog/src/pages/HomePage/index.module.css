@@ -36,3 +36,21 @@
   flex-direction: column;
   gap: 0;
 }
+
+.sharedHeader {
+  margin-bottom: 12px;
+}
+
+.sentinel {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+  min-height: 40px;
+}
+
+.endMessage {
+  text-align: center;
+  padding: 16px 0 32px;
+  color: #bbb;
+  font-size: 14px;
+}
