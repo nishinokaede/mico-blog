@@ -69,7 +69,9 @@ async def migrate_columns():
 
         existing = {r["column_name"] for r in rows[1]}
 
-        for field_name, field in db_fields.items():
+        # tortoise 0.25 中 fields 是 set，遍历 field 对象获取名字
+        for field in db_fields:
+            field_name = field.model_field_name
             if field_name in existing:
                 continue
 
