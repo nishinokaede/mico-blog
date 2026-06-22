@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Select, Input, DatePicker, Button } from 'antd';
+import { Select, Input, DatePicker, Button, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Post, SearchParams, Visibility } from '../../types';
@@ -64,8 +64,9 @@ const SearchPage: React.FC = () => {
         const unpinned = all.filter((p) => !p.isPinned);
         return [...pinned, ...unpinned];
       });
-    } catch {
-      // ignore
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '置顶操作失败';
+      message.error(msg);
     }
   }, []);
 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { message } from 'antd';
 import { Post, User, Tag, AuthState, SiteConfig } from '../types';
 import { getPosts, createPost, updatePost, deletePost, togglePinPost } from '../api/post';
 import { getTags } from '../api/tag';
@@ -157,9 +158,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const unpinned = all.filter((p) => !p.isPinned);
         return [...pinned, ...unpinned];
       });
-    } catch (e) {
-      console.error('置顶操作失败', e);
-      throw e;
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '置顶操作失败';
+      message.error(msg);
     }
   }, []);
 
