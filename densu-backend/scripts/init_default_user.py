@@ -67,7 +67,16 @@ async def migrate_columns():
         if not rows[1]:
             continue  # 表不存在，generate_schemas 会创建
 
-        existing = {r["column_name"] for r in rows[1]}
+        # 兼容不同 tortoise 版本 execute_query 返回格式
+        row_list = rows[1]
+        if row_list and hasattr(row_list[0], "_asdict"):
+            row_list = [r._asdict() for r in row_list]
+        elif row_list and not isinstance(row_list[0], dict):
+            # asyncpg.Record 兼容
+            row_list = [{k: v for k, v in r.items()} for r in row_list]
+
+        existing = {str(r["column_name"]) for r in row_list}
+        print(f"[init] 表 {table} 现有列: {sorted(existing)}", flush=True)
 
         for field_name, field in model._meta.fields_map.items():
             if field_name in existing:
