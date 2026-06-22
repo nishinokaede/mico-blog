@@ -79,6 +79,10 @@ async def migrate_columns():
         print(f"[init] 表 {table} 现有列: {sorted(existing)}", flush=True)
 
         # debug: 打印模型字段与数据库差异
+        import inspect
+        model_source = inspect.getfile(model) if hasattr(inspect, 'getfile') else 'unknown'
+        print(f"[init] 模型 {model_name} 加载自: {model_source}", flush=True)
+        print(f"[init] 模型 {model_name} fields_map 键: {sorted(model._meta.fields_map.keys())}", flush=True)
         model_cols = {fn for fn, f in model._meta.fields_map.items() if not hasattr(f, "reference") and not f.pk}
         missing = model_cols - existing
         if missing:
