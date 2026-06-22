@@ -78,6 +78,14 @@ async def migrate_columns():
         existing = {str(r["column_name"]) for r in row_list}
         print(f"[init] 表 {table} 现有列: {sorted(existing)}", flush=True)
 
+        # debug: 打印模型字段与数据库差异
+        model_cols = {fn for fn, f in model._meta.fields_map.items() if not hasattr(f, "reference") and not f.pk}
+        missing = model_cols - existing
+        if missing:
+            print(f"[init] 表 {table} 缺少字段: {sorted(missing)}", flush=True)
+        else:
+            print(f"[init] 表 {table} 无需迁移", flush=True)
+
         for field_name, field in model._meta.fields_map.items():
             if field_name in existing:
                 continue
