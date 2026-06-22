@@ -74,7 +74,7 @@ export async function getPostById(id: number): Promise<Post | undefined> {
 }
 
 export async function createPost(
-  post: Omit<Post, 'id' | 'createdAt' | 'views'>
+  post: Omit<Post, 'id' | 'createdAt' | 'views' | 'isPinned' | 'pinnedAt'>
 ): Promise<Post> {
   const raw = await unwrap<PostRaw>(
     request.post('/mblog/posts', {

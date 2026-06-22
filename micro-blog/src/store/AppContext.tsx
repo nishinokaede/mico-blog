@@ -18,7 +18,7 @@ interface AppContextType {
   refreshTags: () => Promise<void>;
   refreshUser: () => Promise<void>;
   refreshSiteConfig: () => Promise<void>;
-  addPost: (post: Omit<Post, 'id' | 'createdAt' | 'views'>) => Promise<Post>;
+  addPost: (post: Omit<Post, 'id' | 'createdAt' | 'views' | 'isPinned' | 'pinnedAt'>) => Promise<Post>;
   editPost: (id: number, data: Partial<Post>) => Promise<void>;
   removePost: (id: number) => Promise<void>;
   togglePin: (id: number) => Promise<void>;
@@ -119,7 +119,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  const addPost = useCallback(async (data: Omit<Post, 'id' | 'createdAt' | 'views'>): Promise<Post> => {
+  const addPost = useCallback(async (data: Omit<Post, 'id' | 'createdAt' | 'views' | 'isPinned' | 'pinnedAt'>): Promise<Post> => {
     const newPost = await createPost(data);
     setPosts((prev) => {
       const pinned = prev.filter((p) => p.isPinned);
