@@ -97,12 +97,12 @@ async def init_database():
     await Tortoise.init(config=TORTOISE_ORM)
     print("[init] Tortoise 初始化完成", flush=True)
 
-    # 生成数据库表
+    # 增量迁移：先为已有表补上缺失字段，再建新表
+    await migrate_columns()
+
+    # 生成数据库表（处理全新表）
     await Tortoise.generate_schemas(safe=True)
     print("[init] 数据库表创建完成", flush=True)
-
-    # 运行增量迁移：为已有表添加缺失字段
-    await migrate_columns()
 
     # 检查默认用户是否已存在
     from src.modules.user.models import User
