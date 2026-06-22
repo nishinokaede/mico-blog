@@ -47,6 +47,45 @@ async def wait_for_db(max_retries: int = 30, interval: int = 2):
     raise RuntimeError("数据库连接超时")
 
 
+async def migrate_columns():
+    """通用增量迁移：对比模型定义与数据库实际结构，自动添加缺失字段。
+    
+    每次新增模型字段后无需手动修改此函数。"""
+    print("[init] 检查并执行增量迁移...", flush=True)
+    conn = Tortoise.get_connection("default")
+    generator = conn.schema_generator
+
+    # 遍历所有注册的模型
+    for model_name, model in Tortoise.apps["models"].items():
+        table = model._meta.db_table
+        db_fields = model._meta.fields
+
+        # 查表是否存在
+        rows = await conn.execute_query(
+            f"SELECT column_name FROM information_schema.columns WHERE table_name='{table}'"
+        )
+        if not rows[1]:
+            continue  # 表不存在，generate_schemas 会创建
+
+        existing = {r["column_name"] for r in rows[1]}
+
+        for field_name, field in db_fields.items():
+            if field_name in existing:
+                continue
+
+            # 跳过关联字段（FK 列 / M2M 中间表），它们由 Tortoise 自动管理
+            if hasattr(field, "reference"):
+                continue
+
+            col_sql = generator._get_column_sql(field, safe=True)
+            await conn.execute_script(
+                f'ALTER TABLE "{table}" ADD COLUMN {col_sql}'
+            )
+            print(f"[init] 已添加字段 {table}.{field_name}", flush=True)
+
+    print("[init] 增量迁移完成", flush=True)
+
+
 async def init_database():
     """初始化数据库：等 DB 就绪后用 Tortoise 创建表并插入默认用户。"""
     print("[init] 初始化数据库...", flush=True)
@@ -61,6 +100,9 @@ async def init_database():
     # 生成数据库表
     await Tortoise.generate_schemas(safe=True)
     print("[init] 数据库表创建完成", flush=True)
+
+    # 运行增量迁移：为已有表添加缺失字段
+    await migrate_columns()
 
     # 检查默认用户是否已存在
     from src.modules.user.models import User
