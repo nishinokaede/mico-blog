@@ -83,7 +83,8 @@ async def migrate_columns():
         model_source = inspect.getfile(model) if hasattr(inspect, 'getfile') else 'unknown'
         print(f"[init] 模型 {model_name} 加载自: {model_source}", flush=True)
         print(f"[init] 模型 {model_name} fields_map 键: {sorted(model._meta.fields_map.keys())}", flush=True)
-        model_cols = {fn for fn, f in model._meta.fields_map.items() if not hasattr(f, "reference") and not f.pk}
+        model_cols = {fn for fn, f in model._meta.fields_map.items()
+                      if (not hasattr(f, "reference") or f.reference is None) and not f.pk}
         missing = model_cols - existing
         if missing:
             print(f"[init] 表 {table} 缺少字段: {sorted(missing)}", flush=True)
@@ -100,7 +101,7 @@ async def migrate_columns():
             if in_exist:
                 continue
             # 跳过关联字段（FK/M2M），它们由 Tortoise 自动管理
-            if has_ref:
+            if has_ref and field.reference is not None:
                 continue
             # 跳过 pk 字段（表已存在则 pk 也已存在）
             if is_pk:
