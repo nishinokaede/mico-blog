@@ -91,25 +91,35 @@ async def migrate_columns():
             print(f"[init] 表 {table} 无需迁移", flush=True)
 
         for field_name, field in model._meta.fields_map.items():
-            if field_name in existing:
+            in_exist = field_name in existing
+            has_ref = hasattr(field, "reference")
+            is_pk = field.pk
+            ftype = type(field).__name__
+            if table == "mblog_posts":
+                print(f"[init] DEBUG {table}.{field_name}: type={ftype}, in_exist={in_exist}, has_ref={has_ref}, is_pk={is_pk}", flush=True)
+            if in_exist:
                 continue
             # 跳过关联字段（FK/M2M），它们由 Tortoise 自动管理
-            if hasattr(field, "reference"):
+            if has_ref:
                 continue
             # 跳过 pk 字段（表已存在则 pk 也已存在）
-            if field.pk:
+            if is_pk:
                 continue
 
             # 用 schema generator 生成与 CREATE TABLE 一致的列定义
-            default = gen._get_field_default(field, table, field_name, model)
-            comment = gen._get_field_comment(field, table, field_name)
-            col_sql, _related = gen._get_field_sql_and_related_table(
-                field, table, field_name, default, comment
-            )
-            await conn.execute_script(
-                f'ALTER TABLE "{table}" ADD COLUMN {col_sql}'
-            )
-            print(f"[init] 已添加字段 {table}.{field_name}", flush=True)
+            try:
+                default = gen._get_field_default(field, table, field_name, model)
+                comment = gen._get_field_comment(field, table, field_name)
+                col_sql, _related = gen._get_field_sql_and_related_table(
+                    field, table, field_name, default, comment
+                )
+                await conn.execute_script(
+                    f'ALTER TABLE "{table}" ADD COLUMN {col_sql}'
+                )
+                print(f"[init] 已添加字段 {table}.{field_name}", flush=True)
+            except Exception as e:
+                print(f"[init] 添加字段 {table}.{field_name} 失败: {e}", flush=True)
+                raise
 
     print("[init] 增量迁移完成", flush=True)
 
