@@ -13,6 +13,9 @@ RUN poetry config virtualenvs.create false && poetry install --no-interaction --
 COPY src/ ./src/
 COPY scripts/ ./scripts/
 
+# 清除旧的 Python 字节码缓存，防止加载过期模型
+RUN find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null; exit 0
+
 # 暴露端口
 EXPOSE 8005
 
