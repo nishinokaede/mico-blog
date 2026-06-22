@@ -53,12 +53,12 @@ async def migrate_columns():
     每次新增模型字段后无需手动修改此函数。"""
     print("[init] 检查并执行增量迁移...", flush=True)
     conn = Tortoise.get_connection("default")
-    generator = conn.schema_generator
+    gen_cls = conn.schema_generator  # 返回的是类，需要实例化
+    gen = gen_cls(conn)
 
     # 遍历所有注册的模型
     for model_name, model in Tortoise.apps["models"].items():
         table = model._meta.db_table
-        db_fields = model._meta.fields
 
         # 查表是否存在
         rows = await conn.execute_query(
@@ -69,17 +69,22 @@ async def migrate_columns():
 
         existing = {r["column_name"] for r in rows[1]}
 
-        # tortoise 0.25 中 fields 是 set，遍历 field 对象获取名字
-        for field in db_fields:
-            field_name = field.model_field_name
+        for field_name, field in model._meta.fields_map.items():
             if field_name in existing:
                 continue
-
-            # 跳过关联字段（FK 列 / M2M 中间表），它们由 Tortoise 自动管理
+            # 跳过关联字段（FK/M2M），它们由 Tortoise 自动管理
             if hasattr(field, "reference"):
                 continue
+            # 跳过 pk 字段（表已存在则 pk 也已存在）
+            if field.pk:
+                continue
 
-            col_sql = generator._get_column_sql(field, safe=True)
+            # 用 schema generator 生成与 CREATE TABLE 一致的列定义
+            default = gen._get_field_default(field, table, field_name, model)
+            comment = gen._get_field_comment(field, table, field_name)
+            col_sql, _related = gen._get_field_sql_and_related_table(
+                field, table, field_name, default, comment
+            )
             await conn.execute_script(
                 f'ALTER TABLE "{table}" ADD COLUMN {col_sql}'
             )
