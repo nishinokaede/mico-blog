@@ -104,3 +104,55 @@
   border-top: 1px solid #e8e8e8;
   margin: 16px 0;
 }
+
+/* ── 帖子链接预览 ── */
+
+.postLink {
+  color: #1890ff !important;
+  text-decoration: none;
+}
+
+.postLink:hover {
+  text-decoration: underline;
+}
+
+.linkPreview {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.linkPreviewMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #999;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.linkPreviewPrivate {
+  color: #ff4d4f;
+  font-size: 11px;
+  border: 1px solid #ff4d4f;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.linkPreviewContent {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.linkPreviewContent h1 {
+  font-size: 16px !important;
+}
+
+.linkPreviewContent h2 {
+  font-size: 15px !important;
+}
+
+.linkPreviewContent h3 {
+  font-size: 14px !important;
+}

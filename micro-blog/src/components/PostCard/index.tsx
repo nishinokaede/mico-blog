@@ -25,6 +25,7 @@ import {
   FullscreenOutlined,
   FullscreenExitOutlined,
   PushpinOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Post } from '../../types';
@@ -40,9 +41,10 @@ interface PostCardProps {
   onDelete: (id: number) => void;
   onTagClick: (tag: string) => void;
   onTogglePin?: (id: number) => void;
+  onReply?: (post: Post) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, nickname, isLoggedIn, showIpDevice, onEdit, onDelete, onTagClick, onTogglePin }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, nickname, isLoggedIn, showIpDevice, onEdit, onDelete, onTagClick, onTogglePin, onReply }) => {
   const [current, setCurrent] = useState(0);
 
   // 视频播放器状态
@@ -143,6 +145,16 @@ const PostCard: React.FC<PostCardProps> = ({ post, nickname, isLoggedIn, showIpD
   };
 
   const menuItems = [
+    ...(onReply
+      ? [
+          {
+            key: 'reply',
+            label: '回复',
+            icon: <MessageOutlined />,
+            onClick: () => onReply(post),
+          },
+        ]
+      : []),
     ...(isLoggedIn
       ? [
           {

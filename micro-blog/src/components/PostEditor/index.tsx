@@ -8,7 +8,7 @@ import {
   CloseOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
-import { Post, Visibility } from '../../types';
+import { Post, Visibility, ReplyInfo } from '../../types';
 import request from '../../utils/request';
 import EmojiPicker from '../EmojiPicker';
 import styles from './index.module.css';
@@ -19,10 +19,12 @@ interface PostEditorProps {
   onSubmit: (data: { content: string; visibility: Visibility; tags: string[]; images: string[]; video?: string }) => Promise<void>;
   initialPost?: Post;
   loading?: boolean;
+  replyTo?: ReplyInfo | null;
+  onReplyClear?: () => void;
 }
 
 function extractTags(content: string): string[] {
-  const regex = /#(\w+)/g;
+  const regex = /#([a-zA-Z_]\w*)/g;
   const matches = new Set<string>();
   let match: RegExpExecArray | null;
   while ((match = regex.exec(content)) !== null) {
@@ -67,7 +69,7 @@ async function uploadFile(file: File): Promise<string> {
   return public_url;
 }
 
-const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, initialPost, loading }) => {
+const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, initialPost, loading, replyTo, onReplyClear }) => {
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<Visibility>('public');
   const [images, setImages] = useState<string[]>([]);
@@ -87,6 +89,25 @@ const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, initialPost, loading 
       setVideo(initialPost.video);
     }
   }, [initialPost]);
+
+  // 回复：预填引用链接
+  useEffect(() => {
+    if (replyTo && !initialPost) {
+      const replyText = `> [#${replyTo.postId}](./?post=${replyTo.postId})\n\n`;
+      setContent(replyText);
+      onReplyClear?.();
+      // 延迟聚焦到 textarea 末尾
+      setTimeout(() => {
+        const textarea = textAreaRef.current;
+        if (textarea) {
+          textarea.focus();
+          const len = textarea.value.length;
+          textarea.selectionStart = len;
+          textarea.selectionEnd = len;
+        }
+      }, 100);
+    }
+  }, [replyTo, initialPost, onReplyClear]);
 
   const handleSubmit = useCallback(async () => {
     const trimmed = content.trim();

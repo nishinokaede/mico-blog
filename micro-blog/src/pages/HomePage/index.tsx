@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Modal, Spin, Button } from 'antd';
+import { Modal, Spin, Button, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { Post, Visibility } from '../../types';
+import { Post, Visibility, ReplyInfo } from '../../types';
 import { useAppStore } from '../../store';
 import { getPostById } from '../../api/post';
 import PostEditor from '../../components/PostEditor';
@@ -17,6 +17,7 @@ const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const postIdParam = searchParams.get('post');
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [replyTo, setReplyTo] = useState<ReplyInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [sharedPost, setSharedPost] = useState<Post | null>(null);
   const [sharedLoading, setSharedLoading] = useState(false);
@@ -27,6 +28,7 @@ const HomePage: React.FC = () => {
       setLoading(true);
       try {
         await addPost(data);
+        setReplyTo(null);
       } finally {
         setLoading(false);
       }
@@ -37,6 +39,14 @@ const HomePage: React.FC = () => {
   const handleEdit = useCallback((post: Post) => {
     setEditingPost(post);
   }, []);
+
+  const handleReply = useCallback((post: Post) => {
+    if (!auth.isLoggedIn) {
+      message.warning('请先登录');
+      return;
+    }
+    setReplyTo({ postId: post.id });
+  }, [auth.isLoggedIn]);
 
   const handleEditSubmit = useCallback(
     async (data: { content: string; visibility: Visibility; tags: string[]; images: string[]; video?: string }) => {
@@ -161,6 +171,7 @@ const HomePage: React.FC = () => {
           onDelete={handleDelete}
           onTagClick={handleTagClick}
           onTogglePin={togglePin}
+          onReply={handleReply}
         />
       </div>
     );
@@ -184,7 +195,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {auth.isLoggedIn ? (
-        <PostEditor onSubmit={handleSubmit} loading={loading} />
+        <PostEditor onSubmit={handleSubmit} loading={loading} replyTo={replyTo} onReplyClear={() => setReplyTo(null)} />
       ) : (
         <div className={styles.postList}>
           <EmptyState description="登录后可发布微博" />
@@ -206,6 +217,7 @@ const HomePage: React.FC = () => {
               onDelete={handleDelete}
               onTagClick={handleTagClick}
               onTogglePin={togglePin}
+              onReply={handleReply}
             />
           ))}
           <div ref={sentinelRef} className={styles.sentinel}>

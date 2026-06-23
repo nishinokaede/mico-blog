@@ -88,6 +88,22 @@
   color: #fa541c;
 }
 
+.replyBtn {
+  cursor: pointer;
+  color: #999;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.replyBtn:hover {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
 .moreBtn {
   cursor: pointer;
   color: #999;

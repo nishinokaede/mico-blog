@@ -48,3 +48,7 @@ export interface SiteConfig {
   site_title: string | null;
   show_ip_device: boolean;
 }
+
+export interface ReplyInfo {
+  postId: number;
+}
