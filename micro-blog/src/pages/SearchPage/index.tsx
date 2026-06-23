@@ -35,6 +35,32 @@ const SearchPage: React.FC = () => {
     }
   }, [searchParams]);
 
+  // sync date from URL
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (urlDate) {
+      setDateRange([urlDate, urlDate]);
+    }
+  }, [searchParams]);
+
+  // auto search when date param is present
+  useEffect(() => {
+    const urlDate = searchParams.get('date');
+    if (urlDate) {
+      const params: SearchParams = {
+        tag,
+        visibility,
+        content: content || undefined,
+        dateRange: [urlDate, urlDate],
+      };
+      searchPosts(params).then((data) => {
+        setResults(data);
+        setSearched(true);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const handleSearch = useCallback(async () => {
     const params: SearchParams = {
       tag,

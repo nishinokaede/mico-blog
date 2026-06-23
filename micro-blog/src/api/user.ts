@@ -15,6 +15,7 @@ interface UserRaw {
   email: string;
   bio: string;
   default_visibility: string;
+  created_at?: string;
 }
 
 interface LoginResponse {
@@ -45,6 +46,7 @@ function toUser(raw: UserRaw): User {
     email: raw.email || '',
     bio: raw.bio || '',
     defaultVisibility: (raw.default_visibility as User['defaultVisibility']) || 'public',
+    createdAt: raw.created_at,
   };
 }
 

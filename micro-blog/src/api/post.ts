@@ -118,6 +118,17 @@ export async function togglePinPost(id: number): Promise<Post> {
   return toPost(raw);
 }
 
+interface StatsResponse {
+  memo_count: number;
+  tag_count: number;
+  day_count: number;
+  heatmap: { date: string; count: number }[];
+}
+
+export async function getStats(): Promise<StatsResponse> {
+  return unwrap<StatsResponse>(request.get('/mblog/stats'));
+}
+
 export async function searchPosts(params: SearchParams): Promise<Post[]> {
   const queryParams: Record<string, string> = {};
   if (params.tag) queryParams.tag = params.tag;

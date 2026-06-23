@@ -1,14 +1,27 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import { Post, User, Tag, AuthState, SiteConfig } from '../types';
-import { getPosts, createPost, updatePost, deletePost, togglePinPost } from '../api/post';
+import { getPosts, createPost, updatePost, deletePost, togglePinPost, getStats } from '../api/post';
 import { getTags } from '../api/tag';
 import { getUser, isLoggedIn as checkLogin, getAuthToken, logout as doLogout, getSiteConfig } from '../api/user';
+
+interface HeatmapItem {
+  date: string;
+  count: number;
+}
+
+interface StatsData {
+  memoCount: number;
+  tagCount: number;
+  dayCount: number;
+  heatmap: HeatmapItem[];
+}
 
 interface AppContextType {
   user: User | null;
   posts: Post[];
   tags: Tag[];
+  stats: StatsData;
   loading: boolean;
   loadingMore: boolean;
   hasMore: boolean;
@@ -43,6 +56,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     token: getAuthToken(),
     isLoggedIn: checkLogin(),
     username: null,
+  });
+  const [stats, setStats] = useState<StatsData>({
+    memoCount: 0,
+    tagCount: 0,
+    dayCount: 0,
+    heatmap: [],
   });
   const [siteConfig, setSiteConfig] = useState<SiteConfig>({
     logo_url: null,
@@ -106,8 +125,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const data = await getUser();
       setUser(data);
       setAuth((prev) => ({ ...prev, username: data.nickname }));
-    } catch (e) {
-      console.error('获取用户信息失败', e);
+    } catch (e: unknown) {
+      const axiosErr = e as { response?: { status?: number } };
+      if (axiosErr?.response?.status === 401) {
+        // token 过期或无效，静默清除登录状态
+        doLogout();
+        setAuth({ token: null, isLoggedIn: false, username: null });
+        setUser(null);
+      } else {
+        console.error('获取用户信息失败', e);
+      }
     }
   }, [auth.isLoggedIn]);
 
@@ -120,6 +147,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
+  const refreshStats = useCallback(async () => {
+    try {
+      const data = await getStats();
+      setStats({
+        memoCount: data.memo_count,
+        tagCount: data.tag_count,
+        dayCount: data.day_count,
+        heatmap: data.heatmap,
+      });
+    } catch (e) {
+      console.error('获取统计数据失败', e);
+    }
+  }, []);
+
   const addPost = useCallback(async (data: Omit<Post, 'id' | 'createdAt' | 'views' | 'isPinned' | 'pinnedAt'>): Promise<Post> => {
     const newPost = await createPost(data);
     setPosts((prev) => {
@@ -128,6 +169,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return [...pinned, newPost, ...unpinned];
     });
     await refreshTags();
+    message.success('发帖成功');
     return newPost;
   }, [refreshTags]);
 
@@ -143,6 +185,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await deletePost(id);
     setPosts((prev) => prev.filter((p) => p.id !== id));
     await refreshTags();
+    message.success('删除成功');
   }, [refreshTags]);
 
   const togglePin = useCallback(async (id: number) => {
@@ -194,6 +237,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       await refreshPosts();
       await refreshTags();
+      await refreshStats();
       setLoading(false);
     };
     init();
@@ -205,6 +249,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user,
         posts,
         tags,
+        stats,
         loading,
         loadingMore,
         hasMore,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import dayjs from 'dayjs';
 import styles from './index.module.css';
 
@@ -9,6 +9,7 @@ interface HeatmapData {
 
 interface HeatmapProps {
   data: HeatmapData[];
+  onCellClick?: (date: string) => void;
 }
 
 const COLUMNS = 6;
@@ -25,86 +26,62 @@ function getColor(count: number, maxCount: number): string {
   return '#196127';
 }
 
-function generateCells(data: HeatmapData[]): { date: string; count: number; color: string }[] {
-  const today = dayjs().endOf('day');
-  const counts = new Map<string, number>();
-
-  for (const item of data) {
-    counts.set(item.date, (counts.get(item.date) || 0) + item.count);
-  }
-
-  const maxCount = Math.max(...Array.from(counts.values()), 0);
-
-  const cells: { date: string; count: number; color: string }[] = [];
-  for (let i = TOTAL_CELLS - 1; i >= 0; i--) {
-    const dateStr = today.subtract(i, 'day').format('YYYY-MM-DD');
-    const count = counts.get(dateStr) || 0;
-    cells.push({
-      date: dateStr,
-      count,
-      color: getColor(count, maxCount),
-    });
-  }
-
-  return cells;
-}
-
-const WEEKDAY_LABELS = ['Mon', '', 'Wed', '', 'Fri', '', ''];
-
-function getWeekdayLabels(): string[] {
-  const today = dayjs();
-  const labels: string[] = [];
-  // Row 6 = today, Row 0 = 6 days ago (in the last column)
-  for (let row = 0; row < ROWS; row++) {
-    const weekdayIndex = today.subtract(ROWS - 1 - row, 'day').day();
-    // dayjs day(): 0=Sun, 1=Mon, ..., 6=Sat → map to our labels (0=Sun empty, 1=Mon, etc.)
-    labels.push(WEEKDAY_LABELS[(weekdayIndex + 6) % 7] || '');
-  }
-  return labels;
-}
-
-const Heatmap: React.FC<HeatmapProps> = ({ data }) => {
-  const cells = generateCells(data);
-
-  const columns: { date: string; count: number; color: string }[][] = [];
-  for (let col = 0; col < COLUMNS; col++) {
-    const columnCells: { date: string; count: number; color: string }[] = [];
-    for (let row = 0; row < ROWS; row++) {
-      const index = row * COLUMNS + col;
-      if (index < cells.length) {
-        columnCells.push(cells[index]);
-      }
+const Heatmap: React.FC<HeatmapProps> = ({ data, onCellClick }) => {
+  const columns = useMemo(() => {
+    const today = dayjs();
+    const counts = new Map<string, number>();
+    for (const item of data) {
+      counts.set(item.date, (counts.get(item.date) || 0) + item.count);
     }
-    columns.push(columnCells);
-  }
+    const maxCount = Math.max(...Array.from(counts.values()), 0);
 
-  const weekdayLabels = getWeekdayLabels();
+    const startDate = today.subtract(TOTAL_CELLS - 1, 'day');
+    const cells: { date: string; count: number; color: string; label: string }[] = [];
+
+    for (let i = 0; i < TOTAL_CELLS; i++) {
+      const d = startDate.add(i, 'day');
+      const dateStr = d.format('YYYY-MM-DD');
+      const count = counts.get(dateStr) || 0;
+      cells.push({
+        date: dateStr,
+        count,
+        color: getColor(count, maxCount),
+        label: `${dateStr}: ${count} posts`,
+      });
+    }
+
+    const cols: { date: string; count: number; color: string; label: string }[][] = [];
+    for (let c = 0; c < COLUMNS; c++) {
+      cols.push(cells.slice(c * ROWS, (c + 1) * ROWS));
+    }
+    return cols;
+  }, [data]);
 
   return (
     <div className={styles.heatmap}>
-      <div className={styles.heatmapBody}>
-        <div className={styles.weekdayLabels}>
-          {weekdayLabels.map((label, i) => (
-            <span key={i} className={styles.weekdayLabel}>
-              {label}
-            </span>
-          ))}
-        </div>
-        <div className={styles.grid}>
-          {columns.map((col, colIdx) => (
-            <div key={colIdx} className={styles.column}>
-              {col.map((cell) => (
-                <div
-                  key={cell.date}
-                  className={styles.cell}
-                  style={{ backgroundColor: cell.color }}
-                  title={`${cell.date}: ${cell.count} posts`}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+      <div className={styles.grid}>
+        {columns.map((col, colIdx) => (
+          <div key={colIdx} className={styles.column}>
+            {col.map((cell) => (
+              <div
+                key={cell.date}
+                className={styles.cell}
+                style={{
+                  backgroundColor: cell.color,
+                  cursor: cell.count > 0 && onCellClick ? 'pointer' : 'default',
+                }}
+                title={cell.label}
+                onClick={() => {
+                  if (cell.count > 0 && onCellClick) {
+                    onCellClick(cell.date);
+                  }
+                }}
+              />
+            ))}
+          </div>
+        ))}
       </div>
+
       <div className={styles.legend}>
         <span className={styles.legendLabel}>Less</span>
         <div className={styles.legendCell} style={{ backgroundColor: '#ebedf0' }} />

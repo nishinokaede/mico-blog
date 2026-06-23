@@ -36,7 +36,7 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
       </div>
       <div className={styles.info}>
         <div className={styles.joinDate}>
-          加入于 {dayjs().format('YYYY-MM-DD')}
+          加入于 {user.createdAt ? dayjs(user.createdAt).format('YYYY-MM-DD') : '—'}
         </div>
         {user.bio && <div className={styles.bio}>{user.bio}</div>}
       </div>

@@ -376,6 +376,7 @@ class MblogService:
             "email": user.email or "",
             "bio": user.description or "",
             "default_visibility": "public",
+            "created_at": user.created.isoformat() if user.created else None,
         })
 
     @staticmethod

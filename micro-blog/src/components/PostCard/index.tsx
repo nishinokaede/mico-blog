@@ -201,7 +201,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, nickname, isLoggedIn, showIpD
           )}
         </div>
         <div className={styles.headerRight}>
-          {isLoggedIn && onTogglePin && (
+          {(isLoggedIn && onTogglePin) ? (
             <span
               className={`${styles.pinBtn} ${post.isPinned ? styles.pinBtnActive : ''}`}
               onClick={() => onTogglePin(post.id)}
@@ -209,7 +209,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, nickname, isLoggedIn, showIpD
             >
               <PushpinOutlined />
             </span>
-          )}
+          ) : (!isLoggedIn && post.isPinned) ? (
+            <span className={`${styles.pinBtn} ${styles.pinBtnActive} ${styles.pinBtnDisabled}`} title="已置顶">
+              <PushpinOutlined />
+            </span>
+          ) : null}
           <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
             <span className={styles.moreBtn}>
               <EllipsisOutlined />

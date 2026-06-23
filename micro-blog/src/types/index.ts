@@ -21,6 +21,7 @@ export interface User {
   email: string;
   bio: string;
   defaultVisibility: Visibility;
+  createdAt?: string;
   password?: string;
 }
 

@@ -79,6 +79,15 @@
   color: #d4380d;
 }
 
+.pinBtnDisabled {
+  cursor: default;
+}
+
+.pinBtnDisabled:hover {
+  background: transparent;
+  color: #fa541c;
+}
+
 .moreBtn {
   cursor: pointer;
   color: #999;
